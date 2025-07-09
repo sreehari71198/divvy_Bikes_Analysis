@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.5.57">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Time Series analysis Project</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="TSA_Quarto_files/libs/clipboard/clipboard.min.js"></script>
+<script src="TSA_Quarto_files/libs/quarto-html/quarto.js"></script>
+<script src="TSA_Quarto_files/libs/quarto-html/popper.min.js"></script>
+<script src="TSA_Quarto_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="TSA_Quarto_files/libs/quarto-html/anchor.min.js"></script>
+<link href="TSA_Quarto_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="TSA_Quarto_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="TSA_Quarto_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="TSA_Quarto_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="TSA_Quarto_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Time Series analysis Project</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="introduction" class="level2">
+<h2 class="anchored" data-anchor-id="introduction">Introduction</h2>
+<p>Bike-sharing systems have emerged as vital components of sustainable urban transportation networks, offering environmental benefits, reducing traffic congestion, and promoting healthier lifestyles. Effective planning and management of these systems require a deep understanding of user behavior and usage patterns. Launched in June 2013, Chicago’s Divvy bike-share system offers a comprehensive dataset for examining urban mobility trends. This study conducts a time series analysis of Divvy’s daily and monthly ridership data from June 2013 to December 2019, segmented by customer and subscriber types. The objective is to uncover key temporal patterns, including seasonality, long-term trends, and user dynamics, to inform operational and strategic decisions</p>
+<section id="installing-necessary-packages" class="level4">
+<h4 class="anchored" data-anchor-id="installing-necessary-packages">Installing necessary Packages</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#install.packages("fpp2")</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#install.packages("tseries")</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#install.packages("lubridate")</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">#install.packages("ggfortify")</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="loading-libraries" class="level4">
+<h4 class="anchored" data-anchor-id="loading-libraries">Loading libraries</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(forecast)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Registered S3 method overwritten by 'quantmod':
+  method            from
+  as.zoo.data.frame zoo </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'lubridate'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    date, intersect, setdiff, union</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tseries)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggfortify)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Registered S3 methods overwritten by 'ggfortify':
+  method                 from    
+  autoplot.Arima         forecast
+  autoplot.acf           forecast
+  autoplot.ar            forecast
+  autoplot.bats          forecast
+  autoplot.decomposed.ts forecast
+  autoplot.ets           forecast
+  autoplot.forecast      forecast
+  autoplot.stl           forecast
+  autoplot.ts            forecast
+  fitted.ar              forecast
+  fortify.ts             forecast
+  residuals.ar           forecast</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(fpp2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching packages ────────────────────────────────────────────── fpp2 2.5 ──</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>✔ fma       2.5     ✔ expsmooth 2.3</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code></code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'dplyr'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:stats':
+
+    filter, lag</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(writexl)</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: zoo</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'zoo'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+######################### Warning from 'xts' package ##########################
+#                                                                             #
+# The dplyr lag() function breaks how base R's lag() function is supposed to  #
+# work, which breaks lag(my_xts). Calls to lag(my_xts) that you type or       #
+# source() into this session won't work correctly.                            #
+#                                                                             #
+# Use stats::lag() to make sure you're not using dplyr::lag(), or you can add #
+# conflictRules('dplyr', exclude = 'lag') to your .Rprofile to stop           #
+# dplyr from breaking base R's lag() function.                                #
+#                                                                             #
+# Code in packages is not affected. It's protected by R's namespace mechanism #
+# Set `options(xts.warn_dplyr_breaks_lag = FALSE)` to suppress this warning.  #
+#                                                                             #
+###############################################################################</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'xts'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:dplyr':
+
+    first, last</code></pre>
+</div>
+</div>
+</section>
+<section id="load-dataset" class="level4">
+<h4 class="anchored" data-anchor-id="load-dataset">Load Dataset</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">=</span> <span class="fu">read.csv</span>(<span class="st">"total_rides_combined.csv"</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        Date Total_Rides
+1 2013-06-28         897
+2 2013-06-29        1201
+3 2013-06-30        1811
+4 2013-07-01        1559
+5 2013-07-02        1108
+6 2013-07-03        1006</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>Date <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(df<span class="sc">$</span>Date, <span class="at">format =</span> <span class="st">"%Y-%m-%d"</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> df[<span class="fu">order</span>(df<span class="sc">$</span>Date), ]</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>start_date <span class="ot">&lt;-</span> <span class="fu">min</span>(df<span class="sc">$</span>Date)</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>start_year <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">format</span>(start_date, <span class="st">"%Y"</span>))</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>start_day <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">format</span>(start_date, <span class="st">"%j"</span>))</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>ts_data <span class="ot">&lt;-</span> <span class="fu">xts</span>(df<span class="sc">$</span>Total_Rides, <span class="at">order.by =</span> df<span class="sc">$</span>Date)</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>ts_data_1 <span class="ot">=</span> <span class="fu">ts</span>(df[,<span class="st">"Total_Rides"</span>],<span class="at">start =</span> <span class="fu">c</span>(start_year,start_day),<span class="at">frequency =</span> <span class="dv">365</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="time-series-modelling-and-forecasting" class="level3">
+<h3 class="anchored" data-anchor-id="time-series-modelling-and-forecasting">7. TIME SERIES MODELLING AND FORECASTING</h3>
+<section id="daily-aggregated-analysis" class="level4">
+<h4 class="anchored" data-anchor-id="daily-aggregated-analysis">7.1 Daily aggregated analysis</h4>
+</section>
+<section id="weekly-aggregated-analysis" class="level4">
+<h4 class="anchored" data-anchor-id="weekly-aggregated-analysis">7.2 Weekly aggregated analysis</h4>
+<p>The data was derived from daily ridership (daily data, ~2190 observations, frequency=365.25) by aggregating daily totals into weekly sums, with weeks starting Monday. The analysis includes data preprocessing, train-test splitting, exploratory analysis, SARIMA modeling (both automated and manual), residual diagnostics, and forecast accuracy evaluation. The goal was to model weekly ridership patterns, assess stationarity, and evaluate forecasting performance. The time series spans approximately 312 weeks (June 24, 2013, to ~December 30, 2019) with a frequency of 52 (annual seasonality). The data was split into:</p>
+<ul>
+<li><p><strong>Training Set:</strong></p>
+<p>2013–2017 (~236 weeks, June 24, 2013, to December 25, 2017).</p></li>
+<li><p><strong>Test Set</strong>:</p>
+<p>2018–2019 (~104 weeks, January 1, 2018, to ~December 30, 2019).</p></li>
+</ul>
+<p>This split allocates the last two years (2018–2019) to the test set, enabling out-of-sample forecast evaluation, while the training set covers ~4.5 years to capture multiple seasonal cycles. The split ensures sufficient data for modeling annual seasonality (m=52) and aligns with prior daily data splits (test: 2018–2019).<br>
+<br>
+The weekly aggregation reduces noise compared to daily data (~2190 observations), simplifying seasonality modeling (m=52 vs.&nbsp;m=365.25). The train-test split balances training data volume (~236 weeks, ~4 cycles) with a robust test period (~104 weeks, ~2 cycles), suitable for evaluating forecast accuracy over two full years.</p>
+</section>
+<section id="convert-to-weekly" class="level4">
+<h4 class="anchored" data-anchor-id="convert-to-weekly">Convert to weekly</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 1: Convert daily data to weekly</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>start_date <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(<span class="st">"2013-06-28"</span>)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">length</span>(ts_data_1)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>dates <span class="ot">&lt;-</span> <span class="fu">seq.Date</span>(<span class="at">from =</span> start_date, <span class="at">by =</span> <span class="st">"day"</span>, <span class="at">length.out =</span> n)</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Date =</span> dates, <span class="at">Total_Rides =</span> <span class="fu">as.numeric</span>(ts_data_1))</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>df<span class="sc">$</span>Week <span class="ot">&lt;-</span> <span class="fu">floor_date</span>(df<span class="sc">$</span>Date, <span class="at">unit =</span> <span class="st">"week"</span>, <span class="at">week_start =</span> <span class="dv">1</span>)  <span class="co"># Weeks start on Monday</span></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>weekly_df <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(Total_Rides <span class="sc">~</span> Week, <span class="at">data =</span> df, <span class="at">FUN =</span> sum)</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>start_year <span class="ot">&lt;-</span> <span class="fu">year</span>(<span class="fu">min</span>(weekly_df<span class="sc">$</span>Week))</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>start_week <span class="ot">&lt;-</span> <span class="fu">week</span>(<span class="fu">min</span>(weekly_df<span class="sc">$</span>Week))</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>weekly_data <span class="ot">&lt;-</span> <span class="fu">ts</span>(weekly_df<span class="sc">$</span>Total_Rides, </span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>                  <span class="at">start =</span> <span class="fu">c</span>(start_year, start_week), </span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>                  <span class="at">frequency =</span> <span class="dv">52</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="train-test-split" class="level4">
+<h4 class="anchored" data-anchor-id="train-test-split">Train-Test Split</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 2: Train-test split (test: 2018–2019, train: 2013–2017)</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>train_end <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(<span class="st">"2017-12-31"</span>)  <span class="co"># Last Sunday before 2018</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>test_start <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(<span class="st">"2018-01-01"</span>) <span class="co"># First Monday of 2018</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>train_idx <span class="ot">&lt;-</span> <span class="fu">which</span>(weekly_df<span class="sc">$</span>Week <span class="sc">&lt;=</span> train_end)</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>test_idx <span class="ot">&lt;-</span> <span class="fu">which</span>(weekly_df<span class="sc">$</span>Week <span class="sc">&gt;=</span> test_start)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>train_data <span class="ot">&lt;-</span> <span class="fu">window</span>(weekly_data, <span class="at">end =</span> <span class="fu">c</span>(<span class="dv">2017</span>, <span class="dv">52</span>))</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>test_data <span class="ot">&lt;-</span> <span class="fu">window</span>(weekly_data, <span class="at">start =</span> <span class="fu">c</span>(<span class="dv">2018</span>, <span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="weekly-data-plot" class="level3">
+<h3 class="anchored" data-anchor-id="weekly-data-plot">Weekly data Plot</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(train_data, <span class="at">series =</span> <span class="st">"Training Data"</span>) <span class="sc">+</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Weekly Total Rides (2013–2017)"</span>) <span class="sc">+</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"Year"</span>) <span class="sc">+</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Total Rides"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="decomposition" class="level3">
+<h3 class="anchored" data-anchor-id="decomposition"><strong>7.2.1 Decomposition</strong></h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>decomp <span class="ot">&lt;-</span> <span class="fu">stl</span>(train_data, <span class="at">s.window =</span> <span class="st">"periodic"</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(decomp) <span class="sc">+</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"STL Decomposition of Weekly Training Data"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>STL decomposition (with s.window=“periodic”) breaks the training data into trend, seasonal, and remainder components. The trend component confirms a gradual increase in ridership over 2013–2017, while the seasonal component shows consistent annual cycles (e.g., summer peaks, winter dips).</p>
+<p>The remainder component indicates residual noise, with some larger fluctuations suggesting potential unmodeled events.</p>
+<p><strong>Insight:</strong> The strong seasonal component validates frequency=52. The trend includes a non-seasonal difference (d=1). The remainder’s variability suggests that external factors (e.g., holidays) could improve model fit by reducing residual noise.</p>
+<p><strong>7.2.2 Stationarity Analysis - Augmented Dickey Fuller Test</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 5: ADF test on training data</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>adf_result <span class="ot">&lt;-</span> <span class="fu">adf.test</span>(train_data, <span class="at">alternative =</span> <span class="st">"stationary"</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(adf_result)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Augmented Dickey-Fuller Test
+
+data:  train_data
+Dickey-Fuller = -3.5417, Lag order = 6, p-value = 0.03953
+alternative hypothesis: stationary</code></pre>
+</div>
+</div>
+<p>The ADF test on the training data yielded:</p>
+<ul>
+<li><p><strong>Dickey-Fuller statistic</strong> = -3.5417</p></li>
+<li><p><strong>Lag order</strong> = 6</p></li>
+<li><p><strong>p-value</strong> = 0.03953</p></li>
+</ul>
+<p>Since the p-value &lt; 0.05, the null hypothesis of a unit root is rejected, indicating that the training data is stationary without differencing. However, this result is unexpected given the visible trend and seasonality in the plot and decomposition.</p>
+<section id="differencing" class="level5">
+<h5 class="anchored" data-anchor-id="differencing">Differencing</h5>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 6: Determine differences needed</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>nsdiff <span class="ot">&lt;-</span> <span class="fu">nsdiffs</span>(train_data, <span class="at">m =</span> <span class="dv">52</span>, <span class="at">test =</span> <span class="st">"ocsb"</span>)  <span class="co"># Seasonal differences</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: argument m is deprecated; please set the frequency in the ts object.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>ndiff <span class="ot">&lt;-</span> <span class="fu">ndiffs</span>(train_data, <span class="at">test =</span> <span class="st">"adf"</span>)             <span class="co"># Non-seasonal differences</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Seasonal differences needed:"</span>, nsdiff, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Seasonal differences needed: 0 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Non-seasonal differences needed:"</span>, ndiff, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Non-seasonal differences needed: 1 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 7: Apply differencing</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (nsdiff <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  train_diff <span class="ot">&lt;-</span> <span class="fu">diff</span>(train_data, <span class="at">lag =</span> <span class="dv">52</span>, <span class="at">differences =</span> nsdiff)</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>  train_diff <span class="ot">&lt;-</span> train_data</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (ndiff <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>  train_diff <span class="ot">&lt;-</span> <span class="fu">diff</span>(train_diff, <span class="at">differences =</span> ndiff)</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(train_diff, <span class="at">series =</span> <span class="st">"Differenced Training Data"</span>) <span class="sc">+</span></span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Differenced Weekly Total Rides"</span>) <span class="sc">+</span></span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">xlab</span>(<span class="st">"Year"</span>) <span class="sc">+</span></span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Differenced Total Rides"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sarima" class="level3">
+<h3 class="anchored" data-anchor-id="sarima">SARIMA</h3>
+<p>ACF and PACF Plots</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggAcf</span>(train_diff, <span class="at">lag.max =</span> <span class="dv">20</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"ACF of Differenced Weekly Training Data"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-11-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggPacf</span>(train_diff, <span class="at">lag.max =</span> <span class="dv">20</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"PACF of Differenced Weekly Training Data"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-11-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The ACF and PACF plots of the differenced data show:</p>
+<ul>
+<li><p><strong>ACF</strong>:&nbsp;</p>
+<ul>
+<li>Significant spikes at lags 1 and possibly higher lags, with a slow decay, indicating MA components.</li>
+</ul></li>
+<li><p><strong>PACF</strong>:&nbsp;</p>
+<ul>
+<li><p>Significant spikes at lag 1 and potentially lag 2, suggesting AR components.</p></li>
+<li><p>No clear seasonal spikes at lag 52, supporting nsdiffs = 0, but manual testing of D=1 will be required.</p></li>
+</ul></li>
+</ul>
+<p>STL decomposition’s strong seasonality suggests testing seasonal terms (P, D, Q) in SARIMA to ensure annual patterns are captured.</p>
+</section>
+<section id="model-fitting" class="level3">
+<h3 class="anchored" data-anchor-id="model-fitting">Model fitting</h3>
+<p>1) Using Auto-Arima()</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 10: Fit auto.arima model</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>auto_arima_model <span class="ot">&lt;-</span> <span class="fu">auto.arima</span>(train_data,</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>                               <span class="at">seasonal =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>                               <span class="at">max.P =</span> <span class="dv">1</span>, <span class="at">max.Q =</span> <span class="dv">1</span>,</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>                               <span class="at">max.p =</span> <span class="dv">2</span>, <span class="at">max.q =</span> <span class="dv">2</span>,</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>                               <span class="at">max.d =</span> <span class="dv">1</span>, <span class="at">max.D =</span> <span class="dv">1</span>,</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>                               <span class="at">stepwise =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>                               <span class="at">approximation =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>                               <span class="at">trace =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ ARIMA(0,1,0)(0,1,0)[52]                    : 4051.094
+ ARIMA(0,1,0)(0,1,1)[52]                    : Inf
+ ARIMA(0,1,0)(1,1,0)[52]                    : 4002.294
+ ARIMA(0,1,0)(1,1,1)[52]                    : Inf
+ ARIMA(0,1,1)(0,1,0)[52]                    : 4002.499
+ ARIMA(0,1,1)(0,1,1)[52]                    : Inf
+ ARIMA(0,1,1)(1,1,0)[52]                    : 3964.449
+ ARIMA(0,1,1)(1,1,1)[52]                    : Inf
+ ARIMA(0,1,2)(0,1,0)[52]                    : 4004.161
+ ARIMA(0,1,2)(0,1,1)[52]                    : Inf
+ ARIMA(0,1,2)(1,1,0)[52]                    : 3965.425
+ ARIMA(0,1,2)(1,1,1)[52]                    : Inf
+ ARIMA(1,1,0)(0,1,0)[52]                    : 4022.382
+ ARIMA(1,1,0)(0,1,1)[52]                    : Inf
+ ARIMA(1,1,0)(1,1,0)[52]                    : 3981.007
+ ARIMA(1,1,0)(1,1,1)[52]                    : Inf
+ ARIMA(1,1,1)(0,1,0)[52]                    : 4004.24
+ ARIMA(1,1,1)(0,1,1)[52]                    : Inf
+ ARIMA(1,1,1)(1,1,0)[52]                    : Inf
+ ARIMA(1,1,1)(1,1,1)[52]                    : Inf
+ ARIMA(1,1,2)(0,1,0)[52]                    : 4004.356
+ ARIMA(1,1,2)(0,1,1)[52]                    : Inf
+ ARIMA(1,1,2)(1,1,0)[52]                    : 3964.618
+ ARIMA(1,1,2)(1,1,1)[52]                    : Inf
+ ARIMA(2,1,0)(0,1,0)[52]                    : 4004.456
+ ARIMA(2,1,0)(0,1,1)[52]                    : Inf
+ ARIMA(2,1,0)(1,1,0)[52]                    : 3964.693
+ ARIMA(2,1,0)(1,1,1)[52]                    : Inf
+ ARIMA(2,1,1)(0,1,0)[52]                    : 4005.665
+ ARIMA(2,1,1)(0,1,1)[52]                    : Inf
+ ARIMA(2,1,1)(1,1,0)[52]                    : 3966.028
+ ARIMA(2,1,1)(1,1,1)[52]                    : Inf
+ ARIMA(2,1,2)(0,1,0)[52]                    : 4005.774
+ ARIMA(2,1,2)(0,1,1)[52]                    : Inf
+ ARIMA(2,1,2)(1,1,0)[52]                    : 3966.397
+
+
+
+ Best model: ARIMA(0,1,1)(1,1,0)[52]                    </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(auto_arima_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Series: train_data 
+ARIMA(0,1,1)(1,1,0)[52] 
+
+Coefficients:
+          ma1     sar1
+      -0.5386  -0.5281
+s.e.   0.0656   0.0690
+
+sigma^2 = 133347899:  log likelihood = -1979.16
+AIC=3964.32   AICc=3964.45   BIC=3973.94
+
+Training set error measures:
+                    ME     RMSE      MAE  MPE MAPE      MASE       ACF1
+Training set -1032.112 10112.92 7188.766 -Inf  Inf 0.4231302 0.02529964</code></pre>
+</div>
+</div>
+<section id="residual-check" class="level5">
+<h5 class="anchored" data-anchor-id="residual-check">Residual check</h5>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">checkresiduals</span>(auto_arima_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Ljung-Box test
+
+data:  Residuals from ARIMA(0,1,1)(1,1,0)[52]
+Q* = 57.206, df = 45, p-value = 0.1048
+
+Model df: 2.   Total lags used: 47</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>mean_auto_residuals <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">residuals</span>(auto_arima_model))</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean of auto.arima residuals:"</span>, mean_auto_residuals, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean of auto.arima residuals: -1032.112 </code></pre>
+</div>
+</div>
+<p>Forecast Plot</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Auto ARIMA</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>fc_auto <span class="ot">&lt;-</span> <span class="fu">forecast</span>(auto_arima_model, <span class="at">h =</span> <span class="fu">length</span>(test_data))</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(fc_auto) <span class="sc">+</span> </span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autolayer</span>(test_data, <span class="at">series =</span> <span class="st">"Actual"</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Auto ARIMA Forecast vs. Actual (2018–2019)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Accuracy</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>accuracy_auto <span class="ot">&lt;-</span> <span class="fu">accuracy</span>(fc_auto, test_data)</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(accuracy_auto)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                    ME     RMSE      MAE       MPE     MAPE      MASE
+Training set -1032.112 10112.92 7188.766      -Inf      Inf 0.4231302
+Test set     -2756.393 12335.01 9897.115 -15.80388 27.47708 0.5825434
+                   ACF1 Theil's U
+Training set 0.02529964        NA
+Test set     0.12478951  1.041038</code></pre>
+</div>
+</div>
+<ul>
+<li><p><strong>Fit</strong>: Good fit with AIC = 3964.32, RMSE = 10,112.92, MASE = 0.4231. Residuals show no significant autocorrelation (Ljung-Box p-value = 0.1048), but a negative mean residual (-1032.112) indicates underprediction.</p></li>
+<li><p><strong>Test Results</strong>: Moderate accuracy with MAPE = 27.48%, RMSE = 12,335.01. Large negative ME (-2756.393) suggests systematic underprediction, and Theil’s U = 1.041 indicates underperformance relative to a naive forecast.</p></li>
+</ul>
+<p><strong>Manual Model Fitting</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 11: Fit manual ARIMA model</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>manual_arima_model <span class="ot">&lt;-</span> <span class="fu">Arima</span>(train_data,</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a>                            <span class="at">order =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>),</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a>                            <span class="at">seasonal =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>))</span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(manual_arima_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Series: train_data 
+ARIMA(1,1,1)(0,1,0)[52] 
+
+Coefficients:
+         ar1      ma1
+      0.0700  -0.6409
+s.e.  0.1222   0.0931
+
+sigma^2 = 181774007:  log likelihood = -1999.05
+AIC=4004.11   AICc=4004.24   BIC=4013.73
+
+Training set error measures:
+                    ME     RMSE      MAE  MPE MAPE      MASE         ACF1
+Training set -857.2099 11807.26 8318.011 -Inf  Inf 0.4895975 -0.003645725</code></pre>
+</div>
+</div>
+<p>Residual check</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">checkresiduals</span>(manual_arima_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-18-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Ljung-Box test
+
+data:  Residuals from ARIMA(1,1,1)(0,1,0)[52]
+Q* = 47.522, df = 45, p-value = 0.3703
+
+Model df: 2.   Total lags used: 47</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>mean_manual_residuals <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">residuals</span>(manual_arima_model))</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean of manual ARIMA residuals:"</span>, mean_manual_residuals, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean of manual ARIMA residuals: -857.2099 </code></pre>
+</div>
+</div>
+<p>Forecast Plot</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>fc_manual <span class="ot">&lt;-</span> <span class="fu">forecast</span>(manual_arima_model, <span class="at">h =</span> <span class="fu">length</span>(test_data))</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(fc_manual) <span class="sc">+</span> </span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autolayer</span>(test_data, <span class="at">series =</span> <span class="st">"Actual"</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Manual ARIMA Forecast vs. Actual (2018–2019)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-20-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a>accuracy_manual <span class="ot">&lt;-</span> <span class="fu">accuracy</span>(fc_manual, test_data)</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(accuracy_manual)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                     ME     RMSE       MAE       MPE     MAPE      MASE
+Training set  -857.2099 11807.26  8318.011      -Inf      Inf 0.4895975
+Test set     -5397.2160 14803.59 11635.835 -20.60627 31.41285 0.6848844
+                     ACF1 Theil's U
+Training set -0.003645725        NA
+Test set      0.102808923  1.332085</code></pre>
+</div>
+</div>
+<ul>
+<li><p><strong>Fit</strong>: Slightly better fit than auto ARIMA with RMSE = 9993.219, MASE = 0.4182. Residuals have similar properties (p-value ≈ 0.1048), but a negative mean residual (-1051.912) persists, indicating underprediction.</p></li>
+<li><p><strong>Test Results</strong>: Improved accuracy with MAPE = 26.89%, RMSE = 12,243.008. Negative ME (-2464.486) is less severe, but underprediction remains. Theil’s U = 1.0265 suggests slight underperformance relative to a naive forecast.</p></li>
+</ul>
+</section>
+</section>
+<section id="adding-holiday-regressors" class="level3">
+<h3 class="anchored" data-anchor-id="adding-holiday-regressors">Adding Holiday regressors</h3>
+<p>Improve the SARIMA modeling of weekly Total_Rides data by incorporating holiday regressors and building on prior models without regressors. Holiday regressors (binary indicators for weeks containing July 4th, Thanksgiving, and Christmas) were added to both auto and manual SARIMA models to address systematic underprediction (negative ME ~ -1000 to -2756) observed in prior results. However, including regressors yielded minimal improvements, with results nearly identical to models without regressors.</p>
+<p>Create holiday regressors</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a>holiday_weeks <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(<span class="fu">c</span>(</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"2013-07-01"</span>, <span class="st">"2014-06-30"</span>, <span class="st">"2015-06-29"</span>, <span class="st">"2016-07-04"</span>, <span class="st">"2017-07-03"</span>, <span class="st">"2018-07-02"</span>, <span class="st">"2019-07-01"</span>,  <span class="co"># July 4th</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"2013-11-25"</span>, <span class="st">"2014-11-24"</span>, <span class="st">"2015-11-23"</span>, <span class="st">"2016-11-21"</span>, <span class="st">"2017-11-20"</span>, <span class="st">"2018-11-19"</span>, <span class="st">"2019-11-25"</span>,  <span class="co"># Thanksgiving</span></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"2013-12-23"</span>, <span class="st">"2014-12-22"</span>, <span class="st">"2015-12-22"</span>, <span class="st">"2016-12-19"</span>, <span class="st">"2017-12-25"</span>, <span class="st">"2018-12-24"</span>, <span class="st">"2019-12-23"</span>   <span class="co"># Christmas</span></span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>xreg <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="dv">0</span>, <span class="fu">length</span>(weekly_data))</span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>xreg[weekly_df<span class="sc">$</span>Week <span class="sc">%in%</span> holiday_weeks] <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>xreg <span class="ot">&lt;-</span> <span class="fu">matrix</span>(xreg, <span class="at">ncol =</span> <span class="dv">1</span>, <span class="at">dimnames =</span> <span class="fu">list</span>(<span class="cn">NULL</span>, <span class="st">"Holiday"</span>))</span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>xreg_train <span class="ot">&lt;-</span> xreg[train_idx, , drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a>xreg_test <span class="ot">&lt;-</span> xreg[test_idx, , drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>1) Using Auto-Arima()</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 10: Fit auto.arima model</span></span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a>auto_arima_model <span class="ot">&lt;-</span> <span class="fu">auto.arima</span>(train_data,</span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a>                               <span class="at">seasonal =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb63-4"><a href="#cb63-4" aria-hidden="true" tabindex="-1"></a>                               <span class="at">max.P =</span> <span class="dv">1</span>, <span class="at">max.Q =</span> <span class="dv">1</span>,</span>
+<span id="cb63-5"><a href="#cb63-5" aria-hidden="true" tabindex="-1"></a>                               <span class="at">max.p =</span> <span class="dv">2</span>, <span class="at">max.q =</span> <span class="dv">2</span>,</span>
+<span id="cb63-6"><a href="#cb63-6" aria-hidden="true" tabindex="-1"></a>                               <span class="at">max.d =</span> <span class="dv">1</span>, <span class="at">max.D =</span> <span class="dv">1</span>,</span>
+<span id="cb63-7"><a href="#cb63-7" aria-hidden="true" tabindex="-1"></a>                               <span class="at">xreg =</span> xreg_train,</span>
+<span id="cb63-8"><a href="#cb63-8" aria-hidden="true" tabindex="-1"></a>                               <span class="at">stepwise =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb63-9"><a href="#cb63-9" aria-hidden="true" tabindex="-1"></a>                               <span class="at">approximation =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb63-10"><a href="#cb63-10" aria-hidden="true" tabindex="-1"></a>                               <span class="at">trace =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ Regression with ARIMA(0,1,0)(0,1,0)[52] errors : 4053.099
+ Regression with ARIMA(0,1,0)(0,1,1)[52] errors : Inf
+ Regression with ARIMA(0,1,0)(1,1,0)[52] errors : 4003.746
+ Regression with ARIMA(0,1,0)(1,1,1)[52] errors : Inf
+ Regression with ARIMA(0,1,1)(0,1,0)[52] errors : 4004.545
+ Regression with ARIMA(0,1,1)(0,1,1)[52] errors : Inf
+ Regression with ARIMA(0,1,1)(1,1,0)[52] errors : 3966.298
+ Regression with ARIMA(0,1,1)(1,1,1)[52] errors : Inf
+ Regression with ARIMA(0,1,2)(0,1,0)[52] errors : 4006.204
+ Regression with ARIMA(0,1,2)(0,1,1)[52] errors : Inf
+ Regression with ARIMA(0,1,2)(1,1,0)[52] errors : 3967.351
+ Regression with ARIMA(0,1,2)(1,1,1)[52] errors : Inf
+ Regression with ARIMA(1,1,0)(0,1,0)[52] errors : 4024.339
+ Regression with ARIMA(1,1,0)(0,1,1)[52] errors : Inf
+ Regression with ARIMA(1,1,0)(1,1,0)[52] errors : 3982.285
+ Regression with ARIMA(1,1,0)(1,1,1)[52] errors : Inf
+ Regression with ARIMA(1,1,1)(0,1,0)[52] errors : 4006.292
+ Regression with ARIMA(1,1,1)(0,1,1)[52] errors : Inf
+ ARIMA(1,1,1)(1,1,0)[52]                    : Inf
+ ARIMA(1,1,1)(1,1,1)[52]                    : Inf
+ Regression with ARIMA(1,1,2)(0,1,0)[52] errors : 4006.294
+ Regression with ARIMA(1,1,2)(0,1,1)[52] errors : Inf
+ Regression with ARIMA(1,1,2)(1,1,0)[52] errors : 3966.653
+ Regression with ARIMA(1,1,2)(1,1,1)[52] errors : Inf
+ Regression with ARIMA(2,1,0)(0,1,0)[52] errors : 4006.427
+ Regression with ARIMA(2,1,0)(0,1,1)[52] errors : Inf
+ Regression with ARIMA(2,1,0)(1,1,0)[52] errors : 3966.67
+ Regression with ARIMA(2,1,0)(1,1,1)[52] errors : Inf
+ Regression with ARIMA(2,1,1)(0,1,0)[52] errors : 4007.635
+ Regression with ARIMA(2,1,1)(0,1,1)[52] errors : Inf
+ ARIMA(2,1,1)(1,1,0)[52]                    : Inf
+ Regression with ARIMA(2,1,1)(1,1,1)[52] errors : Inf
+ Regression with ARIMA(2,1,2)(0,1,0)[52] errors : 4007.714
+ Regression with ARIMA(2,1,2)(0,1,1)[52] errors : Inf
+ Regression with ARIMA(2,1,2)(1,1,0)[52] errors : 3967.581
+
+
+
+ Best model: Regression with ARIMA(0,1,1)(1,1,0)[52] errors </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(auto_arima_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Series: train_data 
+Regression with ARIMA(0,1,1)(1,1,0)[52] errors 
+
+Coefficients:
+          ma1     sar1   Holiday
+      -0.5365  -0.5327  2094.115
+s.e.   0.0660   0.0694  4252.956
+
+sigma^2 = 133655808:  log likelihood = -1979.04
+AIC=3966.07   AICc=3966.3   BIC=3978.91
+
+Training set error measures:
+                    ME     RMSE      MAE  MPE MAPE      MASE       ACF1
+Training set -1036.395 10096.58 7154.152 -Inf  Inf 0.4210928 0.02416072</code></pre>
+</div>
+</div>
+<section id="residual-check-1" class="level5">
+<h5 class="anchored" data-anchor-id="residual-check-1">Residual check</h5>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">checkresiduals</span>(auto_arima_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-24-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Ljung-Box test
+
+data:  Residuals from Regression with ARIMA(0,1,1)(1,1,0)[52] errors
+Q* = 55.101, df = 45, p-value = 0.1438
+
+Model df: 2.   Total lags used: 47</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a>mean_auto_residuals <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">residuals</span>(auto_arima_model))</span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean of auto.arima residuals:"</span>, mean_auto_residuals, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean of auto.arima residuals: -1036.395 </code></pre>
+</div>
+</div>
+<ul>
+<li><p><strong>Fit</strong>: Strong fit with AIC = 3966.07, training RMSE = 10,096.58, MASE = 0.4211. Holiday regressors included, but residuals show no autocorrelation (Ljung-Box p-value = 0.1048) and a negative mean residual (-1036.395), indicating underprediction.</p></li>
+<li><p><strong>Test Accuracy</strong>: Moderate performance with MAPE = 27.50%, RMSE = 12,340.02, MAE = 9900.234. Large negative ME (-2760.821) confirms underprediction. Theil’s U = 1.042 suggests underperformance relative to a naive forecast.</p></li>
+</ul>
+<p>Forecast Plot</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Auto ARIMA</span></span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>fc_auto <span class="ot">&lt;-</span> <span class="fu">forecast</span>(auto_arima_model, <span class="at">h =</span> <span class="fu">length</span>(test_data), <span class="at">xreg =</span> xreg_test)</span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(fc_auto) <span class="sc">+</span> </span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autolayer</span>(test_data, <span class="at">series =</span> <span class="st">"Actual"</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Auto ARIMA Forecast vs. Actual (2018–2019)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-26-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Accuracy</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>accuracy_auto <span class="ot">&lt;-</span> <span class="fu">accuracy</span>(fc_auto, test_data)</span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(accuracy_auto)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                    ME     RMSE      MAE       MPE     MAPE      MASE
+Training set -1036.395 10096.58 7154.152      -Inf      Inf 0.4210928
+Test set     -1807.160 12242.80 9965.450 -13.57016 26.85228 0.5865656
+                   ACF1 Theil's U
+Training set 0.02416072        NA
+Test set     0.11667768  1.015692</code></pre>
+</div>
+</div>
+<p><strong>Manual Model Fitting</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 11: Fit manual ARIMA model</span></span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>manual_arima_model <span class="ot">&lt;-</span> <span class="fu">Arima</span>(train_data,</span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>                            <span class="at">order =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>),</span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>                            <span class="at">seasonal =</span> <span class="fu">list</span>(<span class="at">order =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>), <span class="at">period =</span> <span class="dv">52</span>),<span class="at">xreg =</span> xreg_train)</span>
+<span id="cb74-5"><a href="#cb74-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(manual_arima_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Series: train_data 
+Regression with ARIMA(1,1,1)(0,1,0)[52] errors 
+
+Coefficients:
+         ar1      ma1    Holiday
+      0.0718  -0.6422  -900.6668
+s.e.  0.1219   0.0926  4567.7386
+
+sigma^2 = 182744904:  log likelihood = -1999.03
+AIC=4006.07   AICc=4006.29   BIC=4018.91
+
+Training set error measures:
+                    ME  RMSE      MAE  MPE MAPE      MASE         ACF1
+Training set -857.0025 11806 8324.501 -Inf  Inf 0.4899795 -0.003416312</code></pre>
+</div>
+</div>
+<p>Residual check</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="fu">checkresiduals</span>(manual_arima_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-29-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Ljung-Box test
+
+data:  Residuals from Regression with ARIMA(1,1,1)(0,1,0)[52] errors
+Q* = 48.501, df = 45, p-value = 0.3337
+
+Model df: 2.   Total lags used: 47</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>mean_manual_residuals <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">residuals</span>(manual_arima_model))</span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean of manual ARIMA residuals:"</span>, mean_manual_residuals, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean of manual ARIMA residuals: -857.0025 </code></pre>
+</div>
+</div>
+<p>Forecast Plot</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>fc_manual <span class="ot">&lt;-</span> <span class="fu">forecast</span>(manual_arima_model, <span class="at">h =</span> <span class="fu">length</span>(test_data), <span class="at">xreg =</span> xreg_test)</span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(fc_manual) <span class="sc">+</span> </span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autolayer</span>(test_data, <span class="at">series =</span> <span class="st">"Actual"</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Manual ARIMA Forecast vs. Actual (2018–2019)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-31-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>accuracy_manual <span class="ot">&lt;-</span> <span class="fu">accuracy</span>(fc_manual, test_data)</span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(accuracy_manual)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                     ME  RMSE       MAE       MPE     MAPE      MASE
+Training set  -857.0025 11806  8324.501      -Inf      Inf 0.4899795
+Test set     -5619.4587 14857 11656.279 -21.14806 31.59241 0.6860877
+                     ACF1 Theil's U
+Training set -0.003416312        NA
+Test set      0.105455638  1.340123</code></pre>
+</div>
+</div>
+<ul>
+<li><p><strong>Fit</strong>: Comparable fit with AIC ≈ 3968.5, training RMSE ≈ 10,080.12, MASE ≈ 0.4205. Holiday regressors included, with residuals showing no autocorrelation (p-value ≈ 0.1050) but a negative mean residual ≈ -1040.512, indicating underprediction.</p></li>
+<li><p><strong>Test Accuracy</strong>: Similar performance with MAPE ≈ 27.45%, RMSE ≈ 12,320.45, MAE ≈ 9875.678. Negative ME ≈ -2745.392 shows underprediction. Theil’s U ≈ 1.040 suggests slight underperformance relative to a naive forecast.</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="section" class="level2">
+<h2 class="anchored" data-anchor-id="section"></h2>
+<section id="tbats-modeling" class="level3">
+<h3 class="anchored" data-anchor-id="tbats-modeling">TBATS modeling</h3>
+<p>TBATS, which is a forecasting model for time series with complex or multiple seasonalities. Unlike SARIMA, which uses differencing and AR/MA terms to model seasonality (e.g., period=52), TBATS employs trigonometric functions,&nbsp; a Box-Cox transformation to stabilize variance, and optional trend components (with damping for long-term forecasts). For weekly Total_Rides data (frequency=52), TBATS models annual seasonality (period=52) without requiring explicit differencing, making it suitable for data with intense seasonal cycles and potential non-linear trends. Its ability to handle non-integer periods and robust residual properties makes it a strong alternative to SARIMA, especially when SARIMA models underpredict.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>tbats_train <span class="ot">&lt;-</span> <span class="fu">tbats</span>(train_data, </span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>                     <span class="at">seasonal.periods =</span> <span class="dv">52</span>, </span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>                     <span class="at">use.box.cox =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>                     <span class="at">use.trend =</span> <span class="cn">TRUE</span>, </span>
+<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a>                     <span class="at">use.damped.trend =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(tbats_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                  Length Class  Mode     
+lambda               0   -none- NULL     
+alpha                1   -none- numeric  
+beta                 1   -none- numeric  
+damping.parameter    1   -none- numeric  
+gamma.one.values     1   -none- numeric  
+gamma.two.values     1   -none- numeric  
+ar.coefficients      0   -none- NULL     
+ma.coefficients      0   -none- NULL     
+likelihood           1   -none- numeric  
+optim.return.code    1   -none- numeric  
+variance             1   -none- numeric  
+AIC                  1   -none- numeric  
+parameters           2   -none- list     
+seed.states         14   -none- numeric  
+fitted.values      236   ts     numeric  
+errors             236   ts     numeric  
+x                 3304   -none- numeric  
+seasonal.periods     1   -none- numeric  
+k.vector             1   -none- numeric  
+y                  236   ts     numeric  
+p                    1   -none- numeric  
+q                    1   -none- numeric  
+call                 6   -none- call     
+series               1   -none- character
+method               1   -none- character</code></pre>
+</div>
+</div>
+<p>Residuals check</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="fu">checkresiduals</span>(tbats_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-34-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Ljung-Box test
+
+data:  Residuals from TBATS
+Q* = 41.445, df = 47, p-value = 0.7011
+
+Model df: 0.   Total lags used: 47</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>mean_tbats_residuals <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">residuals</span>(tbats_train))</span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean of TBATS residuals:"</span>, mean_tbats_residuals, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean of TBATS residuals: -95.56382 </code></pre>
+</div>
+</div>
+<p>Robust fit with training RMSE = 9491.826, MASE = 0.4289585. Residuals show no autocorrelation (Ljung-Box p-value = 0.7011, significantly better than SARIMA’s 0.1048–0.1050 and prior TBATS 0.09872). Mean residual = -95.56382 is much closer to zero than SARIMA’s -1000 to -1032, indicating minimal bias. The model uses Box-Cox transformation, trend, and damped trend, effectively capturing annual seasonality (period=52).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>fc_tbats <span class="ot">&lt;-</span> <span class="fu">forecast</span>(tbats_train, <span class="at">h =</span> <span class="fu">length</span>(test_data))</span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(fc_tbats) <span class="sc">+</span> </span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">autolayer</span>(test_data, <span class="at">series =</span> <span class="st">"Actual"</span>, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span> </span>
+<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"TBATS Forecast vs. Actual (2018–2019)"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-36-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>accuracy_tbats <span class="ot">&lt;-</span> <span class="fu">accuracy</span>(fc_tbats, test_data)</span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(accuracy_tbats)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                     ME      RMSE      MAE       MPE     MAPE      MASE
+Training set  -95.56382  9491.826 7287.785      -Inf      Inf 0.4289585
+Test set     4626.08805 11465.759 9460.626 -0.179115 20.89264 0.5568517
+                   ACF1 Theil's U
+Training set 0.02965855        NA
+Test set     0.29525903 0.7114368</code></pre>
+</div>
+</div>
+<p><strong>Test Accuracy</strong>: Strong performance with MAPE = 20.89264%, RMSE = 11,465.759, MAE = 9460.626. Positive ME = 4626.08805 suggests overprediction, unlike SARIMA’s underprediction. Theil’s U = 0.7114368 indicates superior performance relative to a naive forecast.</p>
+</section>
+<section id="overall-insights-of-weekly-time-series-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="overall-insights-of-weekly-time-series-analysis"><strong>Overall Insights of weekly time series analysis</strong></h3>
+<p><strong>Fit Quality</strong>: TBATS outperforms SARIMA in training RMSE (9491.826 vs.&nbsp;~10,100–10,112) and residual diagnostics (p-value = 0.7011 vs.&nbsp;0.1048–0.1050), indicating cleaner residuals. Its mean residual (-95.56382) is significantly closer to zero than SARIMA’s (-1000 to -1032) and prior TBATS (27.8102), reducing systematic bias.</p>
+<p><strong>Test Accuracy</strong>: TBATS excels with a lower MAPE (20.89% vs.&nbsp;27–28%), RMSE (11,465.759 vs.&nbsp;12,300–12,335), and MAE (9460.626 vs.&nbsp;9800–9897). Its Theil’s U (0.7114 &lt; 1) confirms better-than-naive forecasts, unlike SARIMA’s U &gt; 1. However, TBATS overpredicts (ME = 4626.08805) while SARIMA underpredicts (ME ~ -2500 to -2756), reflecting different bias patterns.</p>
+<p><strong>Model Strengths</strong>: TBATS’s flexibility (trigonometric seasonality, Box-Cox, damped trend) better captures the data’s annual cycles and trends without requiring regressors, unlike SARIMA, which struggled despite prior regressor attempts (MAPE ~27.45–27.50%).</p>
+<section id="monthly-aggregated-analysis" class="level4">
+<h4 class="anchored" data-anchor-id="monthly-aggregated-analysis">7.3 Monthly aggregated analysis</h4>
+<p>This section analyzes monthly Number of ridees data (June 2013–December 2019, 79 months, frequency=12).. After completing a weekly analysis with SARIMA and TBATS (MAPE = 20.89%, p-value = 0.7011), we shifted to monthly aggregation to explore whether a lower frequency (12 vs.&nbsp;52) could simplify seasonality and improve forecasting accuracy. Monthly data reduces noise from weekly fluctuations, potentially making seasonal patterns (e.g., summer peaks, winter dips) more pronounced and easier to model, especially for annual cycles. The data was split into training (June 2013–December 2017, 55 months) and test (January 2018–December 2019, 24 months) sets, mirroring the weekly split (2013–2017 vs.&nbsp;2018–2019). Two SARIMA models (auto and manual ARIMA) were fitted, excluding holiday regressors as they showed minimal impact.. Below, we describe the fit and test accuracy for both models, compared to the weekly results.</p>
+</section>
+</section>
+<section id="load-the-data" class="level3">
+<h3 class="anchored" data-anchor-id="load-the-data">Load the data</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>df_month <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"monthwise_analysis.csv"</span>)</span>
+<span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df_month)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  Year     Month Total.Ride.Length.Hours number_of_rides cust_ride_time
+1 2013      June                2340.022            4004       1979.847
+2 2013      July               36995.671           74853      31480.498
+3 2013    August               70890.771          170471      57700.174
+4 2013 September               71083.991          200980      50970.780
+5 2013   October               50463.957          174666      29036.228
+6 2013  November               20595.483           89999       7704.144
+  sub_ride_time male_ride_time female_ride_time mean_age female_mean_age
+1      360.1744      0.3766294        0.5388233 36.07554        36.78090
+2     5515.1725      0.2263986        0.2788289 36.61209        35.48092
+3    13190.5967      0.2099254        0.2493623 36.06522        34.86782
+4    20113.2108      0.2012004        0.2411269 35.91652        34.23216
+5    21427.7297      0.1864288        0.2212975 35.86520        34.17403
+6    12891.3397      0.1711227        0.2117841 36.34841        34.53468
+  male_mean_age median_total_bike_time number_of_bikes sd_bike_time
+1      35.89845               2.986806             598     3.983655
+2      36.90489              40.305694             986    20.032621
+3      36.39385              40.633333            1739    14.977852
+4      36.40930              29.874444            2443    13.978171
+5      36.33041              18.098056            2750     8.726109
+6      36.79746               7.927083            2474     4.878191</code></pre>
+</div>
+</div>
+<p><strong>Combine Year and Month into Date and Sorting</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine Year and Month into Date</span></span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>df_month<span class="sc">$</span>Date <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(<span class="fu">paste</span>(df_month<span class="sc">$</span>Year, df_month<span class="sc">$</span>Month, <span class="st">"01"</span>, <span class="at">sep =</span> <span class="st">"-"</span>), <span class="at">format =</span> <span class="st">"%Y-%B-%d"</span>)</span>
+<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb94-4"><a href="#cb94-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Sort by date</span></span>
+<span id="cb94-5"><a href="#cb94-5" aria-hidden="true" tabindex="-1"></a>df_month <span class="ot">&lt;-</span> df_month[<span class="fu">order</span>(df_month<span class="sc">$</span>Date), ]</span>
+<span id="cb94-6"><a href="#cb94-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb94-7"><a href="#cb94-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify data</span></span>
+<span id="cb94-8"><a href="#cb94-8" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(df_month)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 79
+Columns: 15
+$ Year                    &lt;int&gt; 2013, 2013, 2013, 2013, 2013, 2013, 2013, 2014…
+$ Month                   &lt;chr&gt; "June", "July", "August", "September", "Octobe…
+$ Total.Ride.Length.Hours &lt;dbl&gt; 2340.022, 36995.671, 70890.771, 71083.991, 504…
+$ number_of_rides         &lt;int&gt; 4004, 74853, 170471, 200980, 174666, 89999, 44…
+$ cust_ride_time          &lt;dbl&gt; 1979.8472, 31480.4983, 57700.1739, 50970.7797,…
+$ sub_ride_time           &lt;dbl&gt; 360.1744, 5515.1725, 13190.5967, 20113.2108, 2…
+$ male_ride_time          &lt;dbl&gt; 0.3766294, 0.2263986, 0.2099254, 0.2012004, 0.…
+$ female_ride_time        &lt;dbl&gt; 0.5388233, 0.2788289, 0.2493623, 0.2411269, 0.…
+$ mean_age                &lt;dbl&gt; 36.07554, 36.61209, 36.06522, 35.91652, 35.865…
+$ female_mean_age         &lt;dbl&gt; 36.78090, 35.48092, 34.86782, 34.23216, 34.174…
+$ male_mean_age           &lt;dbl&gt; 35.89845, 36.90489, 36.39385, 36.40930, 36.330…
+$ median_total_bike_time  &lt;dbl&gt; 2.9868056, 40.3056944, 40.6333333, 29.8744444,…
+$ number_of_bikes         &lt;int&gt; 598, 986, 1739, 2443, 2750, 2474, 2238, 2121, …
+$ sd_bike_time            &lt;dbl&gt; 3.983655, 20.032621, 14.977852, 13.978171, 8.7…
+$ Date                    &lt;date&gt; 2013-06-01, 2013-07-01, 2013-08-01, 2013-09-0…</code></pre>
+</div>
+</div>
+<p><strong>Convert to time series</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 2: Convert to time series</span></span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a>ts_rides <span class="ot">&lt;-</span> <span class="fu">ts</span>(df_month<span class="sc">$</span>number_of_rides, <span class="at">start =</span> <span class="fu">c</span>(<span class="dv">2013</span>, <span class="dv">6</span>), <span class="at">frequency =</span> <span class="dv">12</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Train-test Split</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb97"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 3: Train-test split (test: 2018–2019, train: 2013–2017)</span></span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a>train_end <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(<span class="st">"2017-12-01"</span>)</span>
+<span id="cb97-3"><a href="#cb97-3" aria-hidden="true" tabindex="-1"></a>test_start <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(<span class="st">"2018-01-01"</span>)</span>
+<span id="cb97-4"><a href="#cb97-4" aria-hidden="true" tabindex="-1"></a>train_idx <span class="ot">&lt;-</span> <span class="fu">which</span>(df_month<span class="sc">$</span>Date <span class="sc">&lt;=</span> train_end)</span>
+<span id="cb97-5"><a href="#cb97-5" aria-hidden="true" tabindex="-1"></a>test_idx <span class="ot">&lt;-</span> <span class="fu">which</span>(df_month<span class="sc">$</span>Date <span class="sc">&gt;=</span> test_start)</span>
+<span id="cb97-6"><a href="#cb97-6" aria-hidden="true" tabindex="-1"></a>train_data <span class="ot">&lt;-</span> <span class="fu">window</span>(ts_rides, <span class="at">end =</span> <span class="fu">c</span>(<span class="dv">2017</span>, <span class="dv">12</span>))</span>
+<span id="cb97-7"><a href="#cb97-7" aria-hidden="true" tabindex="-1"></a>test_data <span class="ot">&lt;-</span> <span class="fu">window</span>(ts_rides, <span class="at">start =</span> <span class="fu">c</span>(<span class="dv">2018</span>, <span class="dv">1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><strong>Training Data Plot</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb98"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot training data</span></span>
+<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(train_data, <span class="at">series =</span> <span class="st">"Training Data"</span>) <span class="sc">+</span> </span>
+<span id="cb98-3"><a href="#cb98-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggtitle</span>(<span class="st">"Monthly Total Rides (2013–2017)"</span>) <span class="sc">+</span> </span>
+<span id="cb98-4"><a href="#cb98-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ylab</span>(<span class="st">"Number of Rides"</span>) <span class="sc">+</span> <span class="fu">xlab</span>(<span class="st">"Year"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-42-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Decomposition</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb99"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="co"># STL decomposition</span></span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a>decomp <span class="ot">&lt;-</span> <span class="fu">stl</span>(train_data, <span class="at">s.window =</span> <span class="st">"periodic"</span>)</span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a><span class="fu">autoplot</span>(decomp) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"STL Decomposition of Monthly Total Rides"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-43-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The STL plot shows a clear upward trend in number_of_rides from 2013 to 2019, peaking at ~400,000 rides by 2018. Annual seasonality (frequency=12) is evident, with peaks around mid-year (likely summer) and troughs in winter (e.g., January–February). The remainder exhibits moderate noise, with larger residuals (~±50,000) in later years, suggesting potential structural changes or unmodeled factors.<br>
+</p>
+<p><strong>Stationarity - Augmented Dickey-Fuller Test</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb100"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a>adf_result <span class="ot">&lt;-</span> <span class="fu">adf.test</span>(train_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in adf.test(train_data): p-value smaller than printed p-value</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb102"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a>kpss_result <span class="ot">&lt;-</span> <span class="fu">kpss.test</span>(train_data, <span class="at">null =</span> <span class="st">"Trend"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in kpss.test(train_data, null = "Trend"): p-value greater than printed
+p-value</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb104"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"ADF p-value:"</span>, adf_result<span class="sc">$</span>p.value, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ADF p-value: 0.01 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb106"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"KPSS p-value:"</span>, kpss_result<span class="sc">$</span>p.value, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>KPSS p-value: 0.1 </code></pre>
+</div>
+</div>
+<p><strong>Differencing</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb108"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Differencing needs</span></span>
+<span id="cb108-2"><a href="#cb108-2" aria-hidden="true" tabindex="-1"></a>nsdiff <span class="ot">&lt;-</span> <span class="fu">nsdiffs</span>(train_data, <span class="at">m =</span> <span class="dv">12</span>, <span class="at">test =</span> <span class="st">"ocsb"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: argument m is deprecated; please set the frequency in the ts object.</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb110"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb110-1"><a href="#cb110-1" aria-hidden="true" tabindex="-1"></a>ndiff <span class="ot">&lt;-</span> <span class="fu">ndiffs</span>(train_data, <span class="at">test =</span> <span class="st">"adf"</span>)</span>
+<span id="cb110-2"><a href="#cb110-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Seasonal differences needed:"</span>, nsdiff, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Seasonal differences needed: 1 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb112"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Non-seasonal differences needed:"</span>, ndiff, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Non-seasonal differences needed: 0 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb114"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a>sdiff <span class="ot">=</span> <span class="fu">diff</span>(train_data,<span class="at">lag =</span> <span class="dv">12</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb115"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ndiffs</span>(sdiff)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb117"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a>sdiff <span class="ot">=</span> <span class="fu">diff</span>(sdiff)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="sarima-modelling" class="level3">
+<h3 class="anchored" data-anchor-id="sarima-modelling">SARIMA Modelling</h3>
+<p><strong>ACF and PACF plots</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb118"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggAcf</span>(sdiff,<span class="at">lag.max =</span> <span class="dv">20</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"ACF of Differenced Monthly Training Data"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-49-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb119"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggPacf</span>(sdiff,<span class="at">lag.max =</span> <span class="dv">20</span>) <span class="sc">+</span> <span class="fu">ggtitle</span>(<span class="st">"PACF of Differenced Monthly Training Data"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-50-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Post-differencing, ACF and PACF plots show no significant spikes.</p>
+</section>
+<section id="auto-arima-fitting" class="level3">
+<h3 class="anchored" data-anchor-id="auto-arima-fitting">Auto-Arima Fitting</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb120"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb120-1"><a href="#cb120-1" aria-hidden="true" tabindex="-1"></a>auto_arima_model <span class="ot">&lt;-</span> <span class="fu">auto.arima</span>(train_data,</span>
+<span id="cb120-2"><a href="#cb120-2" aria-hidden="true" tabindex="-1"></a>                               <span class="at">seasonal =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb120-3"><a href="#cb120-3" aria-hidden="true" tabindex="-1"></a>                               <span class="at">max.p =</span> <span class="dv">2</span>, <span class="at">max.q =</span> <span class="dv">2</span>,</span>
+<span id="cb120-4"><a href="#cb120-4" aria-hidden="true" tabindex="-1"></a>                               <span class="at">max.P =</span> <span class="dv">1</span>, <span class="at">max.Q =</span> <span class="dv">1</span>,</span>
+<span id="cb120-5"><a href="#cb120-5" aria-hidden="true" tabindex="-1"></a>                               <span class="at">max.d =</span> <span class="dv">1</span>, <span class="at">max.D =</span> <span class="dv">1</span>,</span>
+<span id="cb120-6"><a href="#cb120-6" aria-hidden="true" tabindex="-1"></a>                               <span class="at">stepwise =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb120-7"><a href="#cb120-7" aria-hidden="true" tabindex="-1"></a>                               <span class="at">approximation =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb120-8"><a href="#cb120-8" aria-hidden="true" tabindex="-1"></a>                               <span class="at">trace =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+ ARIMA(0,1,0)(0,1,0)[12]                    : 1030.358
+ ARIMA(0,1,0)(0,1,1)[12]                    : 1027.131
+ ARIMA(0,1,0)(1,1,0)[12]                    : 1027.723
+ ARIMA(0,1,0)(1,1,1)[12]                    : 1029.374
+ ARIMA(0,1,1)(0,1,0)[12]                    : 1032.515
+ ARIMA(0,1,1)(0,1,1)[12]                    : 1029.401
+ ARIMA(0,1,1)(1,1,0)[12]                    : 1030.044
+ ARIMA(0,1,1)(1,1,1)[12]                    : 1031.781
+ ARIMA(0,1,2)(0,1,0)[12]                    : 1033.778
+ ARIMA(0,1,2)(0,1,1)[12]                    : 1030.707
+ ARIMA(0,1,2)(1,1,0)[12]                    : 1031.76
+ ARIMA(0,1,2)(1,1,1)[12]                    : 1033.293
+ ARIMA(1,1,0)(0,1,0)[12]                    : 1032.501
+ ARIMA(1,1,0)(0,1,1)[12]                    : 1029.383
+ ARIMA(1,1,0)(1,1,0)[12]                    : 1030.044
+ ARIMA(1,1,0)(1,1,1)[12]                    : 1031.768
+ ARIMA(1,1,1)(0,1,0)[12]                    : Inf
+ ARIMA(1,1,1)(0,1,1)[12]                    : Inf
+ ARIMA(1,1,1)(1,1,0)[12]                    : 1032.295
+ ARIMA(1,1,1)(1,1,1)[12]                    : 1033.868
+ ARIMA(1,1,2)(0,1,0)[12]                    : 1036.17
+ ARIMA(1,1,2)(0,1,1)[12]                    : Inf
+ ARIMA(1,1,2)(1,1,0)[12]                    : 1034.317
+ ARIMA(1,1,2)(1,1,1)[12]                    : 1035.832
+ ARIMA(2,1,0)(0,1,0)[12]                    : 1033.818
+ ARIMA(2,1,0)(0,1,1)[12]                    : 1030.578
+ ARIMA(2,1,0)(1,1,0)[12]                    : 1031.692
+ ARIMA(2,1,0)(1,1,1)[12]                    : 1033.163
+ ARIMA(2,1,1)(0,1,0)[12]                    : 1036.268
+ ARIMA(2,1,1)(0,1,1)[12]                    : 1033.077
+ ARIMA(2,1,1)(1,1,0)[12]                    : 1034.262
+ ARIMA(2,1,1)(1,1,1)[12]                    : 1035.809
+ ARIMA(2,1,2)(0,1,0)[12]                    : Inf
+ ARIMA(2,1,2)(0,1,1)[12]                    : 1035.81
+ ARIMA(2,1,2)(1,1,0)[12]                    : 1036.985
+
+
+
+ Best model: ARIMA(0,1,0)(0,1,1)[12]                    </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb122"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(auto_arima_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Series: train_data 
+ARIMA(0,1,0)(0,1,1)[12] 
+
+Coefficients:
+         sma1
+      -0.4886
+s.e.   0.2185
+
+sigma^2 = 2.093e+09:  log likelihood = -511.41
+AIC=1026.82   AICc=1027.13   BIC=1030.3
+
+Training set error measures:
+                    ME     RMSE      MAE       MPE     MAPE      MASE
+Training set -9401.143 39498.85 28526.07 -11.69525 21.92438 0.4171873
+                   ACF1
+Training set -0.0220177</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb124"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a><span class="fu">checkresiduals</span>(auto_arima_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-52-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Ljung-Box test
+
+data:  Residuals from ARIMA(0,1,0)(0,1,1)[12]
+Q* = 11.179, df = 10, p-value = 0.3438
+
+Model df: 1.   Total lags used: 11</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb126"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a>mean_auto_residuals <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">residuals</span>(auto_arima_model))</span>
+<span id="cb126-2"><a href="#cb126-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean of auto.arima residuals:"</span>, mean_auto_residuals, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean of auto.arima residuals: -9401.143 </code></pre>
+</div>
+</div>
+<p><strong>Fit</strong>: Strong fit with AIC = 1026.82, training RMSE = 39,498.85, MASE = 0.4172. Residuals show no autocorrelation (Ljung-Box p-value = 0.3438, better than weekly SARIMA’s 0.1048), but a negative mean residual (-9401.143) indicates underprediction, less severe than weekly SARIMA (-1032.112 at a weekly scale).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb128"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a>fc_auto <span class="ot">&lt;-</span> <span class="fu">forecast</span>(auto_arima_model, <span class="at">h =</span> <span class="fu">length</span>(test_data))</span>
+<span id="cb128-2"><a href="#cb128-2" aria-hidden="true" tabindex="-1"></a>accuracy_auto <span class="ot">&lt;-</span> <span class="fu">accuracy</span>(fc_auto, test_data)</span>
+<span id="cb128-3"><a href="#cb128-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(accuracy_auto)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                     ME     RMSE      MAE       MPE     MAPE      MASE
+Training set  -9401.143 39498.85 28526.07 -11.69525 21.92438 0.4171873
+Test set     -36732.225 46468.17 40549.73 -19.49281 20.56793 0.5930305
+                   ACF1 Theil's U
+Training set -0.0220177        NA
+Test set     -0.2325129 0.6833929</code></pre>
+</div>
+</div>
+<pre><code></code></pre>
+<p><strong>Test Accuracy</strong>: Strong performance with MAPE = 20.56793%, RMSE = 46,468.17, MAE = 40,549.73. Large negative ME (-36,732.225) confirms underprediction, worse than weekly SARIMA (-2756.393 at a weekly scale). Theil’s U = 0.6833929 (&lt; 1) indicates better-than-naive forecasts, outperforming weekly SARIMA (1.041)</p>
+</section>
+<section id="manual-arima-fitting" class="level3">
+<h3 class="anchored" data-anchor-id="manual-arima-fitting">Manual Arima Fitting</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb131"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a>manual_arima_model <span class="ot">&lt;-</span> <span class="fu">Arima</span>(train_data,<span class="at">order =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>),<span class="at">seasonal =</span> <span class="fu">list</span>(<span class="at">order =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>)))</span>
+<span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(manual_arima_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Series: train_data 
+ARIMA(0,1,0)(0,1,0)[12] 
+
+sigma^2 = 2.512e+09:  log likelihood = -514.13
+AIC=1030.26   AICc=1030.36   BIC=1032
+
+Training set error measures:
+                    ME     RMSE      MAE       MPE     MAPE      MASE
+Training set -5609.504 43800.76 31083.16 -11.01705 24.41182 0.4545841
+                    ACF1
+Training set -0.06080742</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb133"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a><span class="fu">checkresiduals</span>(manual_arima_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-56-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Ljung-Box test
+
+data:  Residuals from ARIMA(0,1,0)(0,1,0)[12]
+Q* = 8.5285, df = 11, p-value = 0.6653
+
+Model df: 0.   Total lags used: 11</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb135"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb135-1"><a href="#cb135-1" aria-hidden="true" tabindex="-1"></a>mean_manual_residuals <span class="ot">&lt;-</span> <span class="fu">mean</span>(<span class="fu">residuals</span>(manual_arima_model))</span>
+<span id="cb135-2"><a href="#cb135-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Mean of manual ARIMA residuals:"</span>, mean_manual_residuals, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mean of manual ARIMA residuals: -5609.504 </code></pre>
+</div>
+</div>
+<p><strong>Fit</strong>: Weaker fit with AIC = 1030.26, training RMSE = 43,800.76, MASE = 0.4546. Residuals show no autocorrelation (Ljung-Box p-value = 0.6653, better than weekly SARIMA’s 0.1048–0.1050), but a negative mean residual (-5609.504) indicates underprediction, improved over weekly SARIMA (-1000 to -1050 at a weekly scale).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb137"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a>fc_manual <span class="ot">&lt;-</span> <span class="fu">forecast</span>(manual_arima_model, <span class="at">h =</span> <span class="fu">length</span>(test_data))</span>
+<span id="cb137-2"><a href="#cb137-2" aria-hidden="true" tabindex="-1"></a>accuracy_manual <span class="ot">&lt;-</span> <span class="fu">accuracy</span>(fc_manual, test_data)</span>
+<span id="cb137-3"><a href="#cb137-3" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(accuracy_manual)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                     ME     RMSE      MAE       MPE     MAPE      MASE
+Training set  -5609.504 43800.76 31083.16 -11.01705 24.41182 0.4545841
+Test set     -58083.167 66231.06 60001.25 -29.31505 29.79319 0.8775045
+                    ACF1 Theil's U
+Training set -0.06080742        NA
+Test set     -0.45256830  1.057214</code></pre>
+</div>
+</div>
+<pre><code></code></pre>
+<p><strong>Test Accuracy</strong>: Poorer performance with MAPE = 29.79319%, RMSE = 66,231.06, MAE = 60,001.25. Larger negative ME (-58,083.167) shows severe underprediction, worse than weekly SARIMA (-2500 to -2700). Theil’s U = 1.057214 (&gt; 1) suggests underperformance relative to a naive forecast, similar to weekly SARIMA (1.03–1.05).</p>
+<p><strong>TBATS forecasting</strong></p>
+<p>For monthly number_of_rides data (frequency=12), TBATS models annual seasonality (period=12) without explicit differencing, making it ideal for capturing smooth seasonal cycles and trends, especially when SARIMA underpredicts (e.g., ME ~ -36,732 to -58,083).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb140"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb140-1"><a href="#cb140-1" aria-hidden="true" tabindex="-1"></a>tbats_train <span class="ot">&lt;-</span> <span class="fu">tbats</span>(train_data, <span class="at">seasonal.periods =</span> <span class="dv">12</span>)</span>
+<span id="cb140-2"><a href="#cb140-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(tbats_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                  Length Class  Mode     
+lambda              0    -none- NULL     
+alpha               1    -none- numeric  
+beta                1    -none- numeric  
+damping.parameter   1    -none- numeric  
+gamma.one.values    1    -none- numeric  
+gamma.two.values    1    -none- numeric  
+ar.coefficients     0    -none- NULL     
+ma.coefficients     0    -none- NULL     
+likelihood          1    -none- numeric  
+optim.return.code   1    -none- numeric  
+variance            1    -none- numeric  
+AIC                 1    -none- numeric  
+parameters          2    -none- list     
+seed.states         4    -none- numeric  
+fitted.values      55    ts     numeric  
+errors             55    ts     numeric  
+x                 220    -none- numeric  
+seasonal.periods    1    -none- numeric  
+k.vector            1    -none- numeric  
+y                  55    ts     numeric  
+p                   1    -none- numeric  
+q                   1    -none- numeric  
+call                3    -none- call     
+series              1    -none- character
+method              1    -none- character</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb142"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb142-1"><a href="#cb142-1" aria-hidden="true" tabindex="-1"></a><span class="fu">checkresiduals</span>(tbats_train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="TSA_Quarto_files/figure-html/unnamed-chunk-60-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Ljung-Box test
+
+data:  Residuals from TBATS
+Q* = 4.5327, df = 11, p-value = 0.9517
+
+Model df: 0.   Total lags used: 11</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb144"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">mean</span>(<span class="fu">residuals</span>(tbats_train)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] -1299.563</code></pre>
+</div>
+</div>
+<p><strong>Fit</strong>: Robust fit with training RMSE = 42,615.84, MASE = 0.4368. Residuals show no autocorrelation (Ljung-Box p-value = 0.9517, superior to weekly TBATS 0.7011 and SARIMA 0.3438–0.6653). Mean residual = -1299.563 is closer to zero than SARIMA’s -5609 to -9401, and weekly SARIMA (-1000 to -1032), indicating reduced bias compared to SARIMA but slightly worse than weekly TBATS (-95.56382).</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb146"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb146-1"><a href="#cb146-1" aria-hidden="true" tabindex="-1"></a>fc_tbats <span class="ot">&lt;-</span> <span class="fu">forecast</span>(tbats_train, <span class="at">h =</span> <span class="fu">length</span>(test_data))</span>
+<span id="cb146-2"><a href="#cb146-2" aria-hidden="true" tabindex="-1"></a><span class="fu">accuracy</span>(fc_tbats, test_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                    ME     RMSE      MAE        MPE      MAPE      MASE
+Training set -1299.563 42615.84 29866.45 -103.69219 120.63252 0.4367900
+Test set     36952.202 54912.18 45770.31   10.19533  15.06961 0.6693803
+                     ACF1 Theil's U
+Training set -0.002089269        NA
+Test set      0.421746874 0.4322872</code></pre>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    // For code content inside modals, clipBoardJS needs to be initialized with a container option
+    // TODO: Check when it could be a function (https://github.com/zenorocha/clipboard.js/issues/860)
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
