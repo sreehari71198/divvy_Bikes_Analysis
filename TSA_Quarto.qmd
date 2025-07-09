@@ -1,0 +1,633 @@
+---
+title: "Time Series analysis Project"
+format: docx
+editor: visual
+---
+
+## Introduction
+
+Bike-sharing systems have emerged as vital components of sustainable urban transportation networks, offering environmental benefits, reducing traffic congestion, and promoting healthier lifestyles. Effective planning and management of these systems require a deep understanding of user behavior and usage patterns. Launched in June 2013, Chicago's Divvy bike-share system offers a comprehensive dataset for examining urban mobility trends. This study conducts a time series analysis of Divvy’s daily and monthly ridership data from June 2013 to December 2019, segmented by customer and subscriber types. The objective is to uncover key temporal patterns, including seasonality, long-term trends, and user dynamics, to inform operational and strategic decisions
+
+#### Installing necessary Packages
+
+```{r}
+#install.packages("fpp2")
+#install.packages("tseries")
+#install.packages("lubridate")
+#install.packages("ggfortify")
+```
+
+#### Loading libraries
+
+```{r}
+library(forecast)
+library(lubridate)
+library(tseries)
+library(ggplot2)
+library(ggfortify)
+library(fpp2)
+library(dplyr)
+library(writexl)
+library(xts)
+```
+
+#### Load Dataset
+
+```{r}
+df = read.csv("total_rides_combined.csv")
+head(df)
+```
+
+```{r}
+df$Date <- as.Date(df$Date, format = "%Y-%m-%d")
+df <- df[order(df$Date), ]
+
+start_date <- min(df$Date)
+start_year <- as.numeric(format(start_date, "%Y"))
+start_day <- as.numeric(format(start_date, "%j"))
+
+ts_data <- xts(df$Total_Rides, order.by = df$Date)
+
+ts_data_1 = ts(df[,"Total_Rides"],start = c(start_year,start_day),frequency = 365)
+```
+
+### 7. TIME SERIES MODELLING AND FORECASTING
+
+#### 7.1 Daily aggregated analysis
+
+#### 7.2 Weekly aggregated analysis
+
+The data was derived from daily ridership (daily data, \~2190 observations, frequency=365.25) by aggregating daily totals into weekly sums, with weeks starting Monday. The analysis includes data preprocessing, train-test splitting, exploratory analysis, SARIMA modeling (both automated and manual), residual diagnostics, and forecast accuracy evaluation. The goal was to model weekly ridership patterns, assess stationarity, and evaluate forecasting performance. The time series spans approximately 312 weeks (June 24, 2013, to \~December 30, 2019) with a frequency of 52 (annual seasonality). The data was split into:
+
+-   **Training Set:**
+
+    2013–2017 (\~236 weeks, June 24, 2013, to December 25, 2017).
+
+-   **Test Set**:
+
+    2018–2019 (\~104 weeks, January 1, 2018, to \~December 30, 2019).
+
+This split allocates the last two years (2018–2019) to the test set, enabling out-of-sample forecast evaluation, while the training set covers \~4.5 years to capture multiple seasonal cycles. The split ensures sufficient data for modeling annual seasonality (m=52) and aligns with prior daily data splits (test: 2018–2019).\
+\
+The weekly aggregation reduces noise compared to daily data (\~2190 observations), simplifying seasonality modeling (m=52 vs. m=365.25). The train-test split balances training data volume (\~236 weeks, \~4 cycles) with a robust test period (\~104 weeks, \~2 cycles), suitable for evaluating forecast accuracy over two full years.
+
+#### Convert to weekly
+
+```{r}
+# Step 1: Convert daily data to weekly
+start_date <- as.Date("2013-06-28")
+n <- length(ts_data_1)
+dates <- seq.Date(from = start_date, by = "day", length.out = n)
+df <- data.frame(Date = dates, Total_Rides = as.numeric(ts_data_1))
+df$Week <- floor_date(df$Date, unit = "week", week_start = 1)  # Weeks start on Monday
+weekly_df <- aggregate(Total_Rides ~ Week, data = df, FUN = sum)
+start_year <- year(min(weekly_df$Week))
+start_week <- week(min(weekly_df$Week))
+weekly_data <- ts(weekly_df$Total_Rides, 
+                  start = c(start_year, start_week), 
+                  frequency = 52)
+```
+
+#### Train-Test Split
+
+```{r}
+# Step 2: Train-test split (test: 2018–2019, train: 2013–2017)
+train_end <- as.Date("2017-12-31")  # Last Sunday before 2018
+test_start <- as.Date("2018-01-01") # First Monday of 2018
+train_idx <- which(weekly_df$Week <= train_end)
+test_idx <- which(weekly_df$Week >= test_start)
+train_data <- window(weekly_data, end = c(2017, 52))
+test_data <- window(weekly_data, start = c(2018, 1))
+```
+
+### Weekly data Plot
+
+```{r}
+autoplot(train_data, series = "Training Data") +
+  ggtitle("Weekly Total Rides (2013–2017)") +
+  xlab("Year") +
+  ylab("Total Rides")
+```
+
+### **7.2.1 Decomposition**
+
+```{r}
+decomp <- stl(train_data, s.window = "periodic")
+autoplot(decomp) +
+  ggtitle("STL Decomposition of Weekly Training Data")
+```
+
+STL decomposition (with s.window="periodic") breaks the training data into trend, seasonal, and remainder components. The trend component confirms a gradual increase in ridership over 2013–2017, while the seasonal component shows consistent annual cycles (e.g., summer peaks, winter dips).
+
+The remainder component indicates residual noise, with some larger fluctuations suggesting potential unmodeled events.
+
+**Insight:** The strong seasonal component validates frequency=52. The trend includes a non-seasonal difference (d=1). The remainder’s variability suggests that external factors (e.g., holidays) could improve model fit by reducing residual noise.
+
+**7.2.2 Stationarity Analysis - Augmented Dickey Fuller Test**
+
+```{r}
+# Step 5: ADF test on training data
+adf_result <- adf.test(train_data, alternative = "stationary")
+print(adf_result)
+```
+
+The ADF test on the training data yielded:
+
+-   **Dickey-Fuller statistic** = -3.5417
+
+-   **Lag order** = 6
+
+-   **p-value** = 0.03953
+
+Since the p-value \< 0.05, the null hypothesis of a unit root is rejected, indicating that the training data is stationary without differencing. However, this result is unexpected given the visible trend and seasonality in the plot and decomposition.
+
+##### Differencing
+
+```{r}
+# Step 6: Determine differences needed
+nsdiff <- nsdiffs(train_data, m = 52, test = "ocsb")  # Seasonal differences
+ndiff <- ndiffs(train_data, test = "adf")             # Non-seasonal differences
+cat("Seasonal differences needed:", nsdiff, "\n")
+cat("Non-seasonal differences needed:", ndiff, "\n")
+
+# Step 7: Apply differencing
+if (nsdiff > 0) {
+  train_diff <- diff(train_data, lag = 52, differences = nsdiff)
+} else {
+  train_diff <- train_data
+}
+if (ndiff > 0) {
+  train_diff <- diff(train_diff, differences = ndiff)
+}
+
+autoplot(train_diff, series = "Differenced Training Data") +
+  ggtitle("Differenced Weekly Total Rides") +
+  xlab("Year") +
+  ylab("Differenced Total Rides")
+```
+
+### SARIMA
+
+ACF and PACF Plots
+
+```{r}
+ggAcf(train_diff, lag.max = 20) + ggtitle("ACF of Differenced Weekly Training Data")
+ggPacf(train_diff, lag.max = 20) + ggtitle("PACF of Differenced Weekly Training Data")
+```
+
+The ACF and PACF plots of the differenced data show:
+
+-   **ACF**: 
+
+    -   Significant spikes at lags 1 and possibly higher lags, with a slow decay, indicating MA components.
+
+-   **PACF**: 
+
+    -   Significant spikes at lag 1 and potentially lag 2, suggesting AR components.
+
+    -   No clear seasonal spikes at lag 52, supporting nsdiffs = 0, but manual testing of D=1 will be required.
+
+STL decomposition’s strong seasonality suggests testing seasonal terms (P, D, Q) in SARIMA to ensure annual patterns are captured.
+
+### Model fitting
+
+1\) Using Auto-Arima()
+
+```{r}
+# Step 10: Fit auto.arima model
+auto_arima_model <- auto.arima(train_data,
+                               seasonal = TRUE,
+                               max.P = 1, max.Q = 1,
+                               max.p = 2, max.q = 2,
+                               max.d = 1, max.D = 1,
+                               stepwise = FALSE,
+                               approximation = FALSE,
+                               trace = TRUE)
+summary(auto_arima_model)
+```
+
+##### Residual check
+
+```{r}
+checkresiduals(auto_arima_model)
+```
+
+```{r}
+mean_auto_residuals <- mean(residuals(auto_arima_model))
+cat("Mean of auto.arima residuals:", mean_auto_residuals, "\n")
+```
+
+Forecast Plot
+
+```{r}
+# Auto ARIMA
+fc_auto <- forecast(auto_arima_model, h = length(test_data))
+autoplot(fc_auto) + 
+  autolayer(test_data, series = "Actual", color = "red") +
+  ggtitle("Auto ARIMA Forecast vs. Actual (2018–2019)")
+```
+
+Accuracy
+
+```{r}
+accuracy_auto <- accuracy(fc_auto, test_data)
+print(accuracy_auto)
+```
+
+-   **Fit**: Good fit with AIC = 3964.32, RMSE = 10,112.92, MASE = 0.4231. Residuals show no significant autocorrelation (Ljung-Box p-value = 0.1048), but a negative mean residual (-1032.112) indicates underprediction.
+
+-   **Test Results**: Moderate accuracy with MAPE = 27.48%, RMSE = 12,335.01. Large negative ME (-2756.393) suggests systematic underprediction, and Theil’s U = 1.041 indicates underperformance relative to a naive forecast.
+
+**Manual Model Fitting**
+
+```{r}
+# Step 11: Fit manual ARIMA model
+manual_arima_model <- Arima(train_data,
+                            order = c(1, 1, 1),
+                            seasonal = c(0, 1, 0))
+summary(manual_arima_model)
+```
+
+Residual check
+
+```{r}
+checkresiduals(manual_arima_model)
+```
+
+```{r}
+mean_manual_residuals <- mean(residuals(manual_arima_model))
+cat("Mean of manual ARIMA residuals:", mean_manual_residuals, "\n")
+```
+
+Forecast Plot
+
+```{r}
+fc_manual <- forecast(manual_arima_model, h = length(test_data))
+autoplot(fc_manual) + 
+  autolayer(test_data, series = "Actual", color = "red") +
+  ggtitle("Manual ARIMA Forecast vs. Actual (2018–2019)")
+```
+
+```{r}
+accuracy_manual <- accuracy(fc_manual, test_data)
+print(accuracy_manual)
+```
+
+-   **Fit**: Slightly better fit than auto ARIMA with RMSE = 9993.219, MASE = 0.4182. Residuals have similar properties (p-value ≈ 0.1048), but a negative mean residual (-1051.912) persists, indicating underprediction.
+
+-   **Test Results**: Improved accuracy with MAPE = 26.89%, RMSE = 12,243.008. Negative ME (-2464.486) is less severe, but underprediction remains. Theil’s U = 1.0265 suggests slight underperformance relative to a naive forecast.
+
+### Adding Holiday regressors
+
+Improve the SARIMA modeling of weekly Total_Rides data by incorporating holiday regressors and building on prior models without regressors. Holiday regressors (binary indicators for weeks containing July 4th, Thanksgiving, and Christmas) were added to both auto and manual SARIMA models to address systematic underprediction (negative ME \~ -1000 to -2756) observed in prior results. However, including regressors yielded minimal improvements, with results nearly identical to models without regressors.
+
+Create holiday regressors
+
+```{r}
+holiday_weeks <- as.Date(c(
+  "2013-07-01", "2014-06-30", "2015-06-29", "2016-07-04", "2017-07-03", "2018-07-02", "2019-07-01",  # July 4th
+  "2013-11-25", "2014-11-24", "2015-11-23", "2016-11-21", "2017-11-20", "2018-11-19", "2019-11-25",  # Thanksgiving
+  "2013-12-23", "2014-12-22", "2015-12-22", "2016-12-19", "2017-12-25", "2018-12-24", "2019-12-23"   # Christmas
+))
+
+xreg <- rep(0, length(weekly_data))
+xreg[weekly_df$Week %in% holiday_weeks] <- 1
+xreg <- matrix(xreg, ncol = 1, dimnames = list(NULL, "Holiday"))
+xreg_train <- xreg[train_idx, , drop = FALSE]
+xreg_test <- xreg[test_idx, , drop = FALSE]
+```
+
+1\) Using Auto-Arima()
+
+```{r}
+# Step 10: Fit auto.arima model
+auto_arima_model <- auto.arima(train_data,
+                               seasonal = TRUE,
+                               max.P = 1, max.Q = 1,
+                               max.p = 2, max.q = 2,
+                               max.d = 1, max.D = 1,
+                               xreg = xreg_train,
+                               stepwise = FALSE,
+                               approximation = FALSE,
+                               trace = TRUE)
+summary(auto_arima_model)
+```
+
+##### Residual check
+
+```{r}
+checkresiduals(auto_arima_model)
+```
+
+```{r}
+mean_auto_residuals <- mean(residuals(auto_arima_model))
+cat("Mean of auto.arima residuals:", mean_auto_residuals, "\n")
+```
+
+-   **Fit**: Strong fit with AIC = 3966.07, training RMSE = 10,096.58, MASE = 0.4211. Holiday regressors included, but residuals show no autocorrelation (Ljung-Box p-value = 0.1048) and a negative mean residual (-1036.395), indicating underprediction.
+
+-   **Test Accuracy**: Moderate performance with MAPE = 27.50%, RMSE = 12,340.02, MAE = 9900.234. Large negative ME (-2760.821) confirms underprediction. Theil’s U = 1.042 suggests underperformance relative to a naive forecast.
+
+Forecast Plot
+
+```{r}
+# Auto ARIMA
+fc_auto <- forecast(auto_arima_model, h = length(test_data), xreg = xreg_test)
+autoplot(fc_auto) + 
+  autolayer(test_data, series = "Actual", color = "red") +
+  ggtitle("Auto ARIMA Forecast vs. Actual (2018–2019)")
+```
+
+Accuracy
+
+```{r}
+accuracy_auto <- accuracy(fc_auto, test_data)
+print(accuracy_auto)
+```
+
+**Manual Model Fitting**
+
+```{r}
+# Step 11: Fit manual ARIMA model
+manual_arima_model <- Arima(train_data,
+                            order = c(1, 1, 1),
+                            seasonal = list(order = c(0, 1, 0), period = 52),xreg = xreg_train)
+summary(manual_arima_model)
+```
+
+Residual check
+
+```{r}
+checkresiduals(manual_arima_model)
+```
+
+```{r}
+mean_manual_residuals <- mean(residuals(manual_arima_model))
+cat("Mean of manual ARIMA residuals:", mean_manual_residuals, "\n")
+```
+
+Forecast Plot
+
+```{r}
+fc_manual <- forecast(manual_arima_model, h = length(test_data), xreg = xreg_test)
+autoplot(fc_manual) + 
+  autolayer(test_data, series = "Actual", color = "red") +
+  ggtitle("Manual ARIMA Forecast vs. Actual (2018–2019)")
+```
+
+```{r}
+accuracy_manual <- accuracy(fc_manual, test_data)
+print(accuracy_manual)
+```
+
+-   **Fit**: Comparable fit with AIC ≈ 3968.5, training RMSE ≈ 10,080.12, MASE ≈ 0.4205. Holiday regressors included, with residuals showing no autocorrelation (p-value ≈ 0.1050) but a negative mean residual ≈ -1040.512, indicating underprediction.
+
+-   **Test Accuracy**: Similar performance with MAPE ≈ 27.45%, RMSE ≈ 12,320.45, MAE ≈ 9875.678. Negative ME ≈ -2745.392 shows underprediction. Theil’s U ≈ 1.040 suggests slight underperformance relative to a naive forecast.
+
+## 
+
+### TBATS modeling
+
+TBATS, which is a forecasting model for time series with complex or multiple seasonalities. Unlike SARIMA, which uses differencing and AR/MA terms to model seasonality (e.g., period=52), TBATS employs trigonometric functions,  a Box-Cox transformation to stabilize variance, and optional trend components (with damping for long-term forecasts). For weekly Total_Rides data (frequency=52), TBATS models annual seasonality (period=52) without requiring explicit differencing, making it suitable for data with intense seasonal cycles and potential non-linear trends. Its ability to handle non-integer periods and robust residual properties makes it a strong alternative to SARIMA, especially when SARIMA models underpredict.
+
+```{r}
+tbats_train <- tbats(train_data, 
+                     seasonal.periods = 52, 
+                     use.box.cox = TRUE, 
+                     use.trend = TRUE, 
+                     use.damped.trend = TRUE)
+summary(tbats_train)
+```
+
+Residuals check
+
+```{r}
+checkresiduals(tbats_train)
+```
+
+```{r}
+mean_tbats_residuals <- mean(residuals(tbats_train))
+cat("Mean of TBATS residuals:", mean_tbats_residuals, "\n")
+```
+
+Robust fit with training RMSE = 9491.826, MASE = 0.4289585. Residuals show no autocorrelation (Ljung-Box p-value = 0.7011, significantly better than SARIMA’s 0.1048–0.1050 and prior TBATS 0.09872). Mean residual = -95.56382 is much closer to zero than SARIMA’s -1000 to -1032, indicating minimal bias. The model uses Box-Cox transformation, trend, and damped trend, effectively capturing annual seasonality (period=52).
+
+```{r}
+fc_tbats <- forecast(tbats_train, h = length(test_data))
+autoplot(fc_tbats) + 
+  autolayer(test_data, series = "Actual", color = "red") + 
+  ggtitle("TBATS Forecast vs. Actual (2018–2019)")
+```
+
+```{r}
+accuracy_tbats <- accuracy(fc_tbats, test_data)
+print(accuracy_tbats)
+```
+
+**Test Accuracy**: Strong performance with MAPE = 20.89264%, RMSE = 11,465.759, MAE = 9460.626. Positive ME = 4626.08805 suggests overprediction, unlike SARIMA’s underprediction. Theil’s U = 0.7114368 indicates superior performance relative to a naive forecast.
+
+### **Overall Insights of weekly time series analysis**
+
+**Fit Quality**: TBATS outperforms SARIMA in training RMSE (9491.826 vs. \~10,100–10,112) and residual diagnostics (p-value = 0.7011 vs. 0.1048–0.1050), indicating cleaner residuals. Its mean residual (-95.56382) is significantly closer to zero than SARIMA’s (-1000 to -1032) and prior TBATS (27.8102), reducing systematic bias.
+
+**Test Accuracy**: TBATS excels with a lower MAPE (20.89% vs. 27–28%), RMSE (11,465.759 vs. 12,300–12,335), and MAE (9460.626 vs. 9800–9897). Its Theil’s U (0.7114 \< 1) confirms better-than-naive forecasts, unlike SARIMA’s U \> 1. However, TBATS overpredicts (ME = 4626.08805) while SARIMA underpredicts (ME \~ -2500 to -2756), reflecting different bias patterns.
+
+**Model Strengths**: TBATS’s flexibility (trigonometric seasonality, Box-Cox, damped trend) better captures the data’s annual cycles and trends without requiring regressors, unlike SARIMA, which struggled despite prior regressor attempts (MAPE \~27.45–27.50%).
+
+#### 7.3 Monthly aggregated analysis
+
+This section analyzes monthly Number of ridees data (June 2013–December 2019, 79 months, frequency=12).. After completing a weekly analysis with SARIMA and TBATS (MAPE = 20.89%, p-value = 0.7011), we shifted to monthly aggregation to explore whether a lower frequency (12 vs. 52) could simplify seasonality and improve forecasting accuracy. Monthly data reduces noise from weekly fluctuations, potentially making seasonal patterns (e.g., summer peaks, winter dips) more pronounced and easier to model, especially for annual cycles. The data was split into training (June 2013–December 2017, 55 months) and test (January 2018–December 2019, 24 months) sets, mirroring the weekly split (2013–2017 vs. 2018–2019). Two SARIMA models (auto and manual ARIMA) were fitted, excluding holiday regressors as they showed minimal impact.. Below, we describe the fit and test accuracy for both models, compared to the weekly results.
+
+### Load the data
+
+```{r}
+df_month <- read.csv("monthwise_analysis.csv")
+head(df_month)
+```
+
+**Combine Year and Month into Date and Sorting**
+
+```{r}
+# Combine Year and Month into Date
+df_month$Date <- as.Date(paste(df_month$Year, df_month$Month, "01", sep = "-"), format = "%Y-%B-%d")
+
+# Sort by date
+df_month <- df_month[order(df_month$Date), ]
+
+# Verify data
+glimpse(df_month)
+```
+
+**Convert to time series**
+
+```{r}
+# Step 2: Convert to time series
+ts_rides <- ts(df_month$number_of_rides, start = c(2013, 6), frequency = 12)
+```
+
+**Train-test Split**
+
+```{r}
+# Step 3: Train-test split (test: 2018–2019, train: 2013–2017)
+train_end <- as.Date("2017-12-01")
+test_start <- as.Date("2018-01-01")
+train_idx <- which(df_month$Date <= train_end)
+test_idx <- which(df_month$Date >= test_start)
+train_data <- window(ts_rides, end = c(2017, 12))
+test_data <- window(ts_rides, start = c(2018, 1))
+```
+
+**Training Data Plot**
+
+```{r}
+# Plot training data
+autoplot(train_data, series = "Training Data") + 
+  ggtitle("Monthly Total Rides (2013–2017)") + 
+  ylab("Number of Rides") + xlab("Year")
+```
+
+**Decomposition**
+
+```{r}
+# STL decomposition
+decomp <- stl(train_data, s.window = "periodic")
+autoplot(decomp) + ggtitle("STL Decomposition of Monthly Total Rides")
+```
+
+The STL plot shows a clear upward trend in number_of_rides from 2013 to 2019, peaking at \~400,000 rides by 2018. Annual seasonality (frequency=12) is evident, with peaks around mid-year (likely summer) and troughs in winter (e.g., January–February). The remainder exhibits moderate noise, with larger residuals (\~±50,000) in later years, suggesting potential structural changes or unmodeled factors.\
+
+**Stationarity - Augmented Dickey-Fuller Test**
+
+```{r}
+adf_result <- adf.test(train_data)
+kpss_result <- kpss.test(train_data, null = "Trend")
+cat("ADF p-value:", adf_result$p.value, "\n")
+cat("KPSS p-value:", kpss_result$p.value, "\n")
+```
+
+**Differencing**
+
+```{r}
+# Differencing needs
+nsdiff <- nsdiffs(train_data, m = 12, test = "ocsb")
+ndiff <- ndiffs(train_data, test = "adf")
+cat("Seasonal differences needed:", nsdiff, "\n")
+cat("Non-seasonal differences needed:", ndiff, "\n")
+```
+
+```{r}
+sdiff = diff(train_data,lag = 12)
+```
+
+```{r}
+ndiffs(sdiff)
+```
+
+```{r}
+sdiff = diff(sdiff)
+```
+
+### SARIMA Modelling
+
+**ACF and PACF plots**
+
+```{r}
+ggAcf(sdiff,lag.max = 20) + ggtitle("ACF of Differenced Monthly Training Data")
+
+```
+
+```{r}
+ggPacf(sdiff,lag.max = 20) + ggtitle("PACF of Differenced Monthly Training Data")
+```
+
+Post-differencing, ACF and PACF plots show no significant spikes.
+
+### Auto-Arima Fitting
+
+```{r}
+auto_arima_model <- auto.arima(train_data,
+                               seasonal = TRUE,
+                               max.p = 2, max.q = 2,
+                               max.P = 1, max.Q = 1,
+                               max.d = 1, max.D = 1,
+                               stepwise = FALSE,
+                               approximation = FALSE,
+                               trace = TRUE)
+summary(auto_arima_model)
+```
+
+```{r}
+checkresiduals(auto_arima_model)
+```
+
+```{r}
+mean_auto_residuals <- mean(residuals(auto_arima_model))
+cat("Mean of auto.arima residuals:", mean_auto_residuals, "\n")
+```
+
+**Fit**: Strong fit with AIC = 1026.82, training RMSE = 39,498.85, MASE = 0.4172. Residuals show no autocorrelation (Ljung-Box p-value = 0.3438, better than weekly SARIMA’s 0.1048), but a negative mean residual (-9401.143) indicates underprediction, less severe than weekly SARIMA (-1032.112 at a weekly scale).
+
+```{r}
+fc_auto <- forecast(auto_arima_model, h = length(test_data))
+accuracy_auto <- accuracy(fc_auto, test_data)
+print(accuracy_auto)
+```
+
+```         
+```
+
+**Test Accuracy**: Strong performance with MAPE = 20.56793%, RMSE = 46,468.17, MAE = 40,549.73. Large negative ME (-36,732.225) confirms underprediction, worse than weekly SARIMA (-2756.393 at a weekly scale). Theil’s U = 0.6833929 (\< 1) indicates better-than-naive forecasts, outperforming weekly SARIMA (1.041)
+
+### Manual Arima Fitting
+
+```{r}
+manual_arima_model <- Arima(train_data,order = c(0, 1, 0),seasonal = list(order = c(0, 1, 0)))
+summary(manual_arima_model)
+```
+
+```{r}
+checkresiduals(manual_arima_model)
+```
+
+```{r}
+mean_manual_residuals <- mean(residuals(manual_arima_model))
+cat("Mean of manual ARIMA residuals:", mean_manual_residuals, "\n")
+```
+
+**Fit**: Weaker fit with AIC = 1030.26, training RMSE = 43,800.76, MASE = 0.4546. Residuals show no autocorrelation (Ljung-Box p-value = 0.6653, better than weekly SARIMA’s 0.1048–0.1050), but a negative mean residual (-5609.504) indicates underprediction, improved over weekly SARIMA (-1000 to -1050 at a weekly scale).
+
+```{r}
+fc_manual <- forecast(manual_arima_model, h = length(test_data))
+accuracy_manual <- accuracy(fc_manual, test_data)
+print(accuracy_manual)
+```
+
+```         
+```
+
+**Test Accuracy**: Poorer performance with MAPE = 29.79319%, RMSE = 66,231.06, MAE = 60,001.25. Larger negative ME (-58,083.167) shows severe underprediction, worse than weekly SARIMA (-2500 to -2700). Theil’s U = 1.057214 (\> 1) suggests underperformance relative to a naive forecast, similar to weekly SARIMA (1.03–1.05).
+
+**TBATS forecasting**
+
+For monthly number_of_rides data (frequency=12), TBATS models annual seasonality (period=12) without explicit differencing, making it ideal for capturing smooth seasonal cycles and trends, especially when SARIMA underpredicts (e.g., ME \~ -36,732 to -58,083).
+
+```{r}
+
+tbats_train <- tbats(train_data, seasonal.periods = 12)
+summary(tbats_train)
+```
+
+```{r}
+checkresiduals(tbats_train)
+```
+
+```{r}
+print(mean(residuals(tbats_train)))
+```
+
+**Fit**: Robust fit with training RMSE = 42,615.84, MASE = 0.4368. Residuals show no autocorrelation (Ljung-Box p-value = 0.9517, superior to weekly TBATS 0.7011 and SARIMA 0.3438–0.6653). Mean residual = -1299.563 is closer to zero than SARIMA’s -5609 to -9401, and weekly SARIMA (-1000 to -1032), indicating reduced bias compared to SARIMA but slightly worse than weekly TBATS (-95.56382).
+
+```{r}
+fc_tbats <- forecast(tbats_train, h = length(test_data))
+accuracy(fc_tbats, test_data)
+```
